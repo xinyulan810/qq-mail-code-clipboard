@@ -1,0 +1,10 @@
+config.json
+.state.json
+tool.log
+*.log
+.instance.lock
+_demo_popup.py
+__pycache__/
+*.pyc
+.venv/
+venv/

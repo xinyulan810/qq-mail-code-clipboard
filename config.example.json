@@ -1,0 +1,12 @@
+{
+  "email": "your_qq_number@qq.com",
+  "auth_code": "粘贴这里：QQ邮箱的16位授权码",
+  "host": "imap.qq.com",
+  "port": 993,
+  "poll_interval": 30,
+  "idle_duration": 1500,
+  "mark_seen": false,
+  "state_file": ".state.json",
+  "extra_patterns": [],
+  "platform_keywords": {}
+}
