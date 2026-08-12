@@ -128,6 +128,8 @@ def _make_card_image():
 def _acquire_single_instance() -> bool:
     """尝试成为唯一实例。返回 True 表示当前是第一个实例，False 表示已有实例在运行。"""
     global _MUTEX_HANDLE
+    if _MUTEX_HANDLE is not None:
+        return True  # 本进程已持有互斥体（重新配置后再次进入监听）
 
     if sys.platform == "win32":
         kernel32 = ctypes.windll.kernel32
@@ -626,6 +628,7 @@ class App:
         self._tray_hidden = False
         self._pump_job = None
         self._tick_job = None
+        self.exit_reason = "quit"
 
         root.title("QQ 验证码监听")
         root.geometry("480x370")
@@ -691,6 +694,9 @@ class App:
 
         buttons = ttk.Frame(outer)
         buttons.pack(fill="x", pady=(10, 0))
+        ttk.Button(buttons, text="重新配置", command=self._request_reconfigure).pack(
+            side="right", padx=(0, 8)
+        )
         ttk.Button(buttons, text="退出", command=self.quit).pack(side="right")
         ttk.Button(buttons, text="清空记录", command=self._clear_history).pack(
             side="right", padx=(0, 8)
@@ -709,6 +715,7 @@ class App:
             return
         menu = pystray.Menu(
             pystray.MenuItem("显示窗口", self._on_tray_show, default=True),
+            pystray.MenuItem("重新配置", self._on_tray_reconfigure),
             pystray.MenuItem("退出", self._on_tray_quit),
         )
         self._tray_icon = pystray.Icon(
@@ -724,6 +731,9 @@ class App:
 
     def _on_tray_quit(self, _icon, _item) -> None:
         self._post("tray_quit")
+
+    def _on_tray_reconfigure(self, _icon, _item) -> None:
+        self._post("reconfigure")
 
     def _on_root_unmap(self, _event) -> None:
         # 用户点击最小化时，从任务栏收进系统托盘
@@ -771,6 +781,11 @@ class App:
                 icon.stop()
             except Exception:
                 pass
+
+    def _request_reconfigure(self) -> None:
+        """退出当前监听，回到设置向导（重新配置后自动继续监听）。"""
+        self.exit_reason = "reconfigure"
+        self.quit()
 
     def _start_show_listener(self) -> None:
         """监听本地端口：第二个实例启动时通知我们打开窗口。"""
@@ -914,6 +929,8 @@ class App:
         elif kind == "tray_quit":
             self._tray_stop()
             self.quit()
+        elif kind == "reconfigure":
+            self._request_reconfigure()
 
     def _update_status_dot(self, text: str) -> None:
         if text.startswith("连接异常"):
@@ -961,8 +978,16 @@ class App:
 # 入口
 # ---------------------------------------------------------------------------
 
-def main() -> None:
-    # 日志：始终写一份到 tool.log（pythonw 无控制台时也能排查），有控制台时同时输出
+_LOGGING_READY = False
+
+
+def _setup_logging() -> None:
+    """日志：始终写一份到 tool.log（pythonw/exe 无控制台时也能排查），有控制台时同时输出。"""
+    global _LOGGING_READY
+    if _LOGGING_READY:
+        return
+    _LOGGING_READY = True
+
     root_logger = logging.getLogger()
     root_logger.setLevel(logging.INFO)
     fmt = logging.Formatter(
@@ -980,6 +1005,23 @@ def main() -> None:
         stream_handler.setFormatter(fmt)
         root_logger.addHandler(stream_handler)
 
+
+def run_gui(cfg: dict, catchup: bool = False) -> str:
+    """启动监听窗口并进入消息循环；返回退出原因：'quit' 或 'reconfigure'。"""
+    _setup_logging()
+    if not _acquire_single_instance():
+        # 已有实例在运行：唤起它的窗口，本实例直接退出
+        _signal_existing_instance()
+        print("检测到工具已在运行，已切换到现有窗口（本实例退出）", flush=True)
+        return "quit"
+
+    root = tk.Tk()
+    app = App(root, cfg, catchup=catchup)
+    root.mainloop()
+    return app.exit_reason
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(description="QQ 邮箱验证码弹窗工具（IMAP IDLE 推送）")
     parser.add_argument(
         "-c",
@@ -990,22 +1032,14 @@ def main() -> None:
     parser.add_argument("--catchup", action="store_true", help="启动时也处理存量未处理邮件")
     args = parser.parse_args()
 
-    if not _acquire_single_instance():
-        # 已有实例在运行：唤起它的窗口，本实例直接退出
-        _signal_existing_instance()
-        print("检测到工具已在运行，已切换到现有窗口（本实例退出）", flush=True)
-        return
-
-    root = tk.Tk()
     try:
         cfg = engine.load_config(Path(args.config))
     except SystemExit as exc:
+        root = tk.Tk()
         root.withdraw()
         messagebox.showerror("配置错误", str(exc), parent=root)
         return
-
-    App(root, cfg, catchup=args.catchup)
-    root.mainloop()
+    run_gui(cfg, catchup=args.catchup)
 
 
 if __name__ == "__main__":

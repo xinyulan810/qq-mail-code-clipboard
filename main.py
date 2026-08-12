@@ -38,7 +38,14 @@ try:
 except ImportError:
     pyperclip = None
 
-BASE_DIR = Path(__file__).resolve().parent
+def _app_dir() -> Path:
+    """程序所在目录：打包成 exe 后取 exe 所在目录，开发时取源码目录。"""
+    if getattr(sys, "frozen", False):
+        return Path(sys.executable).resolve().parent
+    return Path(__file__).resolve().parent
+
+
+BASE_DIR = _app_dir()
 DEFAULT_CONFIG_PATH = BASE_DIR / "config.json"
 DEFAULT_STATE_PATH = BASE_DIR / ".state.json"
 
