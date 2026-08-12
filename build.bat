@@ -1,16 +1,15 @@
 @echo off
-chcp 65001 >nul
 cd /d "%~dp0"
 
-echo æ­£åœ¨å®‰è£…æ‰“åŒ…å·¥å…·ï¼ˆPyInstallerï¼‰...
+echo ÕıÔÚ°²×°´ò°ü¹¤¾ß£¨PyInstaller£©...
 python -m pip install pyinstaller -i https://mirrors.aliyun.com/pypi/simple/ --disable-pip-version-check -q
 
-echo æ­£åœ¨ç”Ÿæˆå›¾æ ‡...
+echo ÕıÔÚÉú³ÉÍ¼±ê...
 python -c "import gui; gui._make_tray_icon_image(256).save('icon.ico', sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])"
 
-echo æ­£åœ¨æ‰“åŒ…ï¼ˆçº¦ 1-2 åˆ†é’Ÿï¼‰...
-python -m PyInstaller --noconfirm --clean --onefile --windowed --name "QQéªŒè¯ç å·¥å…·" --icon icon.ico app.py
+echo ÕıÔÚ´ò°ü£¨Ô¼ 1-2 ·ÖÖÓ£©...
+python -m PyInstaller --noconfirm --clean --onefile --windowed --name "QQMailCodeTool" --icon icon.ico app.py
 
 echo.
-echo æ‰“åŒ…å®Œæˆï¼šdist\QQéªŒè¯ç å·¥å…·.exe
+echo ´ò°üÍê³É£ºdist\QQMailCodeTool.exe
 pause

@@ -48,13 +48,13 @@
 
 ### 0. 开箱即用版（推荐，Windows）
 
-双击 **`启动.bat`**，或直接运行 **`dist\QQ验证码工具.exe`**（单文件，无需安装 Python）：
+双击 **`启动.bat`**，或直接运行 **`dist\QQMailCodeTool.exe`**（单文件，无需安装 Python）：
 
 - **首次运行弹出设置向导**：引导开启 QQ 邮箱 IMAP、获取 16 位授权码、测试连接，保存后自动进入监听
 - 之后直接进入监听；状态窗口和托盘右键都有“重新配置”入口
 - 配置保存在 exe 同目录的 `config.json`，不会上传
 
-想自己重新打包（比如改代码后）：运行 `build.bat`，产物在 `dist\QQ验证码工具.exe`。
+想自己重新打包（比如改代码后）：运行 `build.bat`，产物在 `dist\QQMailCodeTool.exe`。
 
 ### 1. 获取 QQ 邮箱授权码
 

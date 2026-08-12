@@ -4,8 +4,8 @@ cd /d "%~dp0"
 title QQ 邮箱验证码工具
 
 rem 优先使用打包好的单文件版本
-if exist "dist\QQ验证码工具.exe" (
-    start "" "dist\QQ验证码工具.exe"
+if exist "dist\QQMailCodeTool.exe" (
+    start "" "dist\QQMailCodeTool.exe"
     exit
 )
 
